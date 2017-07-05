@@ -226,6 +226,9 @@ layer {
     stride: 4
   }
 }
+
+# CONSIDER *MAX* POOLING APPROPRIATE?
+
 #####################################################
 # generate new subsamples and labels after conv3
 layer {

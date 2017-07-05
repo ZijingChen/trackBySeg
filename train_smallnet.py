@@ -9,9 +9,12 @@ caffe.set_device(1)
 
 solver = caffe.SGDSolver('./model/solver_smallnet.prototxt')
 
-
+PROJ_DIR = '/home/zichen/PythonPrograms/DeepLearning/Segmentation/FCNsegmentation'
+SAVE_DIR = 'run_best_perf_to_copy/be_copied'
+DEPLOY_FILE = os.path.join(PROJ_DIR, SAVE_DIR, 'deploy.prototxt')
+SAVED_MODEL_FILE = os.path.join(PROJ_DIR, SAVE_DIR, 'fcn8s.caffemodel')
 # load weight
-net0 = caffe.Net('/home/zichen/PythonPrograms/DeepLearning/Segmentation/FCNsegmentation/run_best_perf_to_copy/be_copied/deploy.prototxt', '/home/zichen/PythonPrograms/DeepLearning/Segmentation/FCNsegmentation/run_best_perf_to_copy/be_copied/fcn8s.caffemodel', caffe.TEST)
+net0 = caffe.Net(DEPLOY_FILE, SAVED_MODEL_FILE, caffe.TEST)
 params0 = net0.params.keys()# VGG net
 
 #pdb.set_trace()

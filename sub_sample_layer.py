@@ -44,7 +44,9 @@ class SubSampleLayer(caffe.Layer):
         # step1: get subsample positions
         features = bottom[0].data
         labels = bottom[1].data
-        sample_pos, sample_label = self.get_subsample(features,labels,self.img_width,self.img_height) # sample_pos and sample_label are numpy matrix
+        sample_pos, sample_label = self.get_subsample(
+            features, labels, 
+            self.img_width, self.img_height) # sample_pos and sample_label are numpy matrix
 
         # step2: get subfeature maps from sample_pos, that's same as color images
         resized_features = self.get_features_from_pos(features,sample_pos)
@@ -57,25 +59,24 @@ class SubSampleLayer(caffe.Layer):
     def backward(self, top, propagate_down, bottom):
         pass
 
-    def get_subsample(features,label,img_width,img_height):
-    # sample_pos = [xmin ymin xmax ymax, xmin1 ymin1 xmax1 ymax1; xmin_,ymin_,xmax_,ymax_,xmin1_,ymin1_,xmax1_,ymax1_]
-    # sample_label = [0;1]
+    def get_subsample(features, label, img_width, img_height):
+        # sample_pos = [xmin ymin xmax ymax, xmin1 ymin1 xmax1 ymax1; xmin_,ymin_,xmax_,ymax_,xmin1_,ymin1_,xmax1_,ymax1_]
+        # sample_label = [0;1]
         num_pos_sample = self.sample_num
         num_neg_sample = self.sample_num
-        sample_pos = np.zeros(self.sample_num,8)
-        sample_label = np.zeros(self.sample_num,1)
+        sample_pos = np.zeros(self.sample_num, 8)
+        sample_label = np.zeros(self.sample_num, 1)
         pos_cnt = 0
         neg_cnt = 0
 
         # get sample range: around bounding boxes
-        labelnp = np.array(label, dtype=np.uint8)
-        labelnp = np.squeeze(labelnp)
-        if labelnp.max()==255:
-            labelnp = labelnp/255
-        labelnp = np.uint8(labelnp)
-        tmp_loc = np.where(labelnp>0)
-        rows = tmp_loc[0]
-        cols = tmp_loc[1]
+        labelnp = np.array(label, dtype=np.uint8).squeeze()
+        # better check: assert labelnp.shape
+        # if labelnp.max()==255:
+        #     labelnp = labelnp/255
+        labelnp(labelnp>0) = 1
+        # labelnp = np.uint8(labelnp)
+        rows, cols = np.nonzeros(labelnp)
         rowmin = rows.min()
         rowmax = rows.max()
         colmin = cols.min()
@@ -91,18 +92,23 @@ class SubSampleLayer(caffe.Layer):
         # generate subsamples
         pos_mat = np.zeros((num_pos_sample,4))
         neg_mat = np.zeros((num_neg_sample,4))
+        # CONSIDER SEEDING THE SAMPLE GENERATION FOR DEBUGGING 
         while(pos_cnt<num_pos_sample or neg_cnt<pos_neg_sample):
             xmin = random.randint(sample_xmin, sample_xmax - sample_width)# TODO
             ymin = random.randint(sample_ymin, sample_ymax - sample_height)#TODO:what if minus<0
             xmax = xmin + sample_width - 1
             ymax = ymin + sample_height -1
             # judge the label of this new subsample
-            filtered_mask = labelnp[xmin:xmax+1;ymin:ymax+1]
-            acc_value = sum(sum(filtered_mask))
-            if acc_value>=(filtered_mask.shape[0]*filtered_mask.shape[1]*0.5):
+            # BUG -> IMAGE COORD EXCHANGE!
+            filtered_mask = labelnp[xmin:xmax+1; ymin:ymax+1] BUG BUG
+            
+            < acc_value = sum(sum(filtered_mask)) EFFICIENCY-> filtered_mask.sum()
+            < if acc_value>=(filtered_mask.shape[0]*filtered_mask.shape[1]*0.5):
+            > if filtered_mask.mean() >= .5:
+
                 if pos_cnt<num_pos_sample:
                     # get positive subsample
-                    pos_mat[pos_cnt,:] = [xmin, ymin, xmax, ymax]
+                    pos_mat[pos_cnt,:] = [xmin, ymin, xmax, ymax] CARE ABOUT COORDINATE ORDER
                     pos_cnt = pos_cnt+1
             else:
                 if neg_cnt<num_neg_sample:
@@ -164,7 +170,7 @@ pos_mat_for_part1[round(diff_cnt_thred*0.5):,:]),axis=1)#5*8
         noutpixel = self.out_pixel
         for ind in range(0,num_batch_out):
             loc_vec = sample_pos(ind,:)
-            xmin1 = loc_vec[0,0]
+            xmin1 = loc_vec[0,0] 1D [0, ] UNCECESSARY
             ymin1 = loc_vec[0,1]
             xmax1 = loc_vec[0,2]
             ymax1 = loc_vec[0,3]
@@ -175,6 +181,10 @@ pos_mat_for_part1[round(diff_cnt_thred*0.5):,:]),axis=1)#5*8
 
             # resize feature pair for each channel
             # actually it is down sample
+            # NEED TEST !!!!
+
+            CHECK (np.linspace(ymin, ymax, noutpixel)+0.5).astype(np.uint)
+
             yinds1 = self.subsample_locs(ymin1,ymax1,noutpixel)
             xinds1 = self.subsample_locs(xmin1,xmax1,noutpixel)
             yinds2 = self.subsample_locs(ymin2,ymax2,noutpixel)
