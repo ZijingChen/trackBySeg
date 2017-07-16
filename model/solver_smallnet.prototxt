@@ -4,14 +4,14 @@ average_loss: 20
 
 lr_policy: "poly"
 power: 0.9
-base_lr: 1e-3
+base_lr: 0.5e-2
 max_iter: 150000
 
 momentum: 0.9
 
 iter_size: 1
 weight_decay: 0.0005
-snapshot: 0
-snapshot_prefix: "snapshot/train"
+snapshot: 2000
+snapshot_prefix: "snapshots/train_points_bear"
 #clip_gradients: 10
 type: "RMSProp"

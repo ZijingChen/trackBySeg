@@ -9,6 +9,7 @@ import scipy.io as sio
 import scipy
 import cv2
 import math
+import sys
 
 class VOCSegDataLayer(caffe.Layer):
 
@@ -65,7 +66,6 @@ class VOCSegDataLayer(caffe.Layer):
     def reshape(self, bottom, top):
         # load image + label image pair
         #pdb.set_trace()
-        self.loc_list = self.get_cross_area(self.idx, self.acc)
         self.data = self.load_image(self.idx);#self.indices[self.idx])
         self.label = self.load_label(self.idx);#self.indices[self.idx])
 
@@ -87,15 +87,17 @@ class VOCSegDataLayer(caffe.Layer):
             while sample_flag:
                 self.idx = random.randint(0,self.train_num-1)
                 # check if two imgs belong to the same video clip
-                prev_path = self.img_path[self.idx-self.acc]
+                prev_path = self.img_path[self.idx-1]
                 cur_path = self.img_path[self.idx]
                 #pdb.set_trace()
                 prev_clip_name = prev_path.strip().split('/')[3]
                 cur_clip_name = cur_path.strip().split('/')[3]
                 if prev_clip_name==cur_clip_name: # belong to same clip, no more samping
                     sample_flag = 0
-            #print 'Following idx are chosen!!!!!'
-            #print self.idx
+            #print 'Next idx= '+str(self.idx)
+            #print cur_clip_name
+            #sys.stdout.flush() 
+
         else:
             self.idx += 1
             if self.idx == len(self.indices):
@@ -110,7 +112,8 @@ class VOCSegDataLayer(caffe.Layer):
 
         ind2 = self.idx 
         im2 = Image.open(self.dataset_dir+self.img_path[ind2])
-
+        #print('Now img:')
+        #print(self.dataset_dir+self.img_path[ind2])
         in_tmp2 = np.array(im2, dtype=np.uint8)
         in_tmp2 = scipy.misc.imresize(in_tmp2, self.imsz, interp='nearest', mode=None)
         in_tmp2 = in_tmp2[:,:,::-1]

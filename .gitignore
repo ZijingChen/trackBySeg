@@ -1,0 +1,7 @@
+*.pyc
+*~
+DAVIS
+OpticalFlowToolkit
+/results/
+/results_czj/
+/snapshots/
